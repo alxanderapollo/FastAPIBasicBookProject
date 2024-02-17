@@ -1,5 +1,8 @@
 from fastapi import Body, FastAPI
 from pydantic import BaseModel, Field
+# to use optional and not required feilds need to be brough over through typing instead of 
+# pydantic
+from typing import Optional
 
 app = FastAPI()
 
@@ -20,7 +23,7 @@ class Book:
 
 
 class BookRequest(BaseModel):
-    id: int 
+    id: Optional[int] = None
     title: str = Field(min_length=3)
     author: str =  Field(min_length=1)
     description: str =  Field(min_length=1, max_length=100)
@@ -54,4 +57,18 @@ async def readAllBooks():
 @app.post('/create-book')
 async def create_book(book_request: BookRequest):
     new_book = Book(**book_request.model_dump())
-    BOOKS.append(book_request)
+    BOOKS.append(findBookId(book_request))
+
+
+def findBookId(book:Book):
+    # if we have books in our list
+        # get the last book in the list and add 1 to the new book
+    # otherwise its our first book in the list, assign one
+
+    # return the book
+    if len(BOOKS) > 0:
+        book.id = BOOKS[-1].id + 1
+    else:
+        book.id = 1
+    
+    return book
