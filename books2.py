@@ -6,7 +6,7 @@ from typing import Optional
 
 app = FastAPI()
 
-
+#  this class creates our book object once we've succesfully validated our items 
 class Book:
     id: int
     title: str
@@ -21,7 +21,7 @@ class Book:
         self.description = description
         self.rating = rating
 
-
+# this class serves as our validator for our book items
 class BookRequest(BaseModel):
     id: Optional[int] = None
     title: str = Field(min_length=3)
@@ -29,6 +29,17 @@ class BookRequest(BaseModel):
     description: str =  Field(min_length=1, max_length=100)
     # gt means greater than so we're saying > than -1, lt means lessthan
     rating:int =  Field(gt=0,lt=6)
+
+    # config for having an automatic example in our schema
+    class Config:
+        json_schema_extra ={
+            'example' : {
+                'title': 'A new book',
+                'author': 'codingwithroby',
+                'description': ' A new description of a book',
+                'rating': 5
+            }
+        }
 
 
 # book request objt, to validate our book request so that we can transform it into  abook and add it to our list
@@ -46,6 +57,25 @@ BOOKS = [
 @app.get("/books")
 async def readAllBooks():
     return BOOKS
+
+
+# api endpoint to find a book based on an ID
+@app.get('/books/{book_id}')
+async def read_book(book_id:int):
+    for book in BOOKS:
+        if book.id == book_id:
+            return book
+        
+@app.get ('/books/')
+async def read_book_by_rating(book_rating: int):
+    booksToReturn = []
+    for book in BOOKS:
+        if book.rating == book_rating:
+            booksToReturn.append(book)
+    
+    return booksToReturn
+
+
 
 '''
 1.book request is of type BookRequest(our validation model above)
