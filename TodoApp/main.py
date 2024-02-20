@@ -68,22 +68,35 @@ async def create_todo(db:db_dependency, todo_request:TodoRequest):
 
 
 @app.put('/todo/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(db:db_dependency, todo_id: int, todo_request:TodoRequest):
+async def update_todo(db:db_dependency,todo_request:TodoRequest, todo_id: int = Path(gt =0)):
     # todo_model is the todo that we find in the db that matches the todo we want to update
     todo_model= db.query(Todos).filter(Todos.id == todo_id).first()
     # if we can't find the todo - then return to the user none exists!
     if todo_model is None: 
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    print('iamhere')
     # update all of the attributes
     todo_model.title = todo_request.title
     todo_model.description = todo_request.description
     todo_model.priority = todo_request.priority
     todo_model.complete = todo_request.complete
 
-    print('title:',todo_model.title, 'priority:', todo_model.priority, 'complete:', todo_model.complete  )
     db.add(todo_model)
     db.commit()
 
+@app.delete('/todos/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
+
+async def delete_todo(db:db_dependency, todo_id: int = Path(gt=0)):
+    # query the DB and gather all of the Todos and filter by ID
+    # once we find the matching Todo
+    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+
+    # if we cant find a matching id then raise an exception
+    if todo_model is None:
+        raise HTTPException(status_code=404, detail="Todo not found")
+    
+    # otherwise since we found our Todo delete it
+    # filter and find the todo, delete it and then commit it as a transcation to our DB
+    db.query(Todos).filter(Todos.id == todo_id).delete()
+    db.commit()
 
