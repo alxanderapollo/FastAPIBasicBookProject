@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 # this is URL creates a location of this DB on our FAST API application
 # in other words our DB will be in this directory inside of our TODO APP
-SQLALCHEMY_DATABASE_URL = 'sqlite:///./todos.db'
+SQLALCHEMY_DATABASE_URL = 'sqlite:///./todosapp.db'
 # 2. Create a DB Engine - allows us to open up a connection and let folks use our DB
     # look above for our import create_engine
 

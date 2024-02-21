@@ -9,6 +9,6 @@ app = FastAPI()
 # only runs if our todo.db does not exist
 models.Base.metadata.create_all(bind=engine)
 
-# to include api endpoints from our auth file 
+# to include api endpoints from our auth file and todos 
 app.include_router(auth.router)
 app.include_router(todos.router)
