@@ -84,11 +84,13 @@ async def create_todo(user:user_dependency,db:db_dependency, todo_request:TodoRe
 # means to flush the pending changes and commit the current items to the DB
     db.commit()
 
-
+# update our request based on authentication
 @router.put('/todo/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
-async def update_todo(db:db_dependency,todo_request:TodoRequest, todo_id: int = Path(gt =0)):
+async def update_todo(user:user_dependency,db:db_dependency,todo_request:TodoRequest, todo_id: int = Path(gt =0)):
+    if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
+    
     # todo_model is the todo that we find in the db that matches the todo we want to update
-    todo_model= db.query(Todos).filter(Todos.id == todo_id).first()
+    todo_model= db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get('id')).first()
     # if we can't find the todo - then return to the user none exists!
     if todo_model is None: 
         raise HTTPException(status_code=404, detail="Todo not found")
@@ -104,10 +106,14 @@ async def update_todo(db:db_dependency,todo_request:TodoRequest, todo_id: int = 
 
 @router.delete('/todos/{todo_id}', status_code=status.HTTP_204_NO_CONTENT)
 
-async def delete_todo(db:db_dependency, todo_id: int = Path(gt=0)):
+async def delete_todo(user:user_dependency,db:db_dependency, todo_id: int = Path(gt=0)):
+
+    if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
+
+
     # query the DB and gather all of the Todos and filter by ID
     # once we find the matching Todo
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+    todo_model = db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get('id')).first()
 
     # if we cant find a matching id then raise an exception
     if todo_model is None:
@@ -115,6 +121,6 @@ async def delete_todo(db:db_dependency, todo_id: int = Path(gt=0)):
     
     # otherwise since we found our Todo delete it
     # filter and find the todo, delete it and then commit it as a transcation to our DB
-    db.query(Todos).filter(Todos.id == todo_id).delete()
+    db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get('id')).delete()
     db.commit()
 
