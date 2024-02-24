@@ -8,8 +8,12 @@ from database import SessionLocal
 from typing import Annotated
 from sqlalchemy.orm import Session
 from starlette import status
+from .auth import get_current_user
 
-router = APIRouter()
+router = APIRouter(
+     prefix='/todo',
+    tags=['todo']
+)
 # creates everything from our models file, and Db file to create a new DB with Todos and all of the columns that have been layed out
 # only runs if our todo.db does not exist
 # models.Base.metadata.create_all(bind=engine)
@@ -33,6 +37,8 @@ def get_db():
     
 #  we can pass this varaible around to open up our api end point connection to our Db as Dependency injection, instead of writing a long list, fo
 db_dependency = Annotated[Session, Depends(get_db)]
+# depends on whether we can get a user
+user_dependency = Annotated[dict, Depends(get_current_user)]
 
 # validation for our todo request
 # dont need to make an id bc fast api takes care of it
@@ -45,8 +51,8 @@ class TodoRequest(BaseModel):
 # annotated is from typing, session
 # return db.query takes our models of todos, and returns all of the items inside 
 @router.get("/", status_code = status.HTTP_200_OK)
-async def read_all(db:db_dependency):
-    return db.query(Todos).all()
+async def read_all(db:db_dependency, user:user_dependency):
+    return db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
 
 # return a match as soon as we see one
 @router.get('/todo/{todo_id}', status_code = status.HTTP_200_OK)
@@ -56,8 +62,12 @@ async def read_todo(db: db_dependency, todo_id: int = Path(gt = 0) ):
     raise HTTPException(status_code = 404, detail='Todo not found')
 
 @router.post('/todo', status_code=status.HTTP_201_CREATED)
-async def create_todo(db:db_dependency, todo_request:TodoRequest):
-    todo_model= Todos(**todo_request.model_dump())
+async def create_todo(user:user_dependency,db:db_dependency, todo_request:TodoRequest):
+
+    # check that the user is valid
+    if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
+    # the user id is the forign key inside of todos - which is what the todos table is missing
+    todo_model= Todos(**todo_request.model_dump(),owner_id=user.get('id'))
 
     '''.add() adds to the open DB sessions (think of it more like getting the database ready with some data.)
         .commit() flush's the commit (whatever is in add.()) and actually runs the submission to the database.
