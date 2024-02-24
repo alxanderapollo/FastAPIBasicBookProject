@@ -11,7 +11,6 @@ from starlette import status
 from .auth import get_current_user
 
 router = APIRouter(
-     prefix='/todo',
     tags=['todo']
 )
 # creates everything from our models file, and Db file to create a new DB with Todos and all of the columns that have been layed out
@@ -52,12 +51,19 @@ class TodoRequest(BaseModel):
 # return db.query takes our models of todos, and returns all of the items inside 
 @router.get("/", status_code = status.HTTP_200_OK)
 async def read_all(db:db_dependency, user:user_dependency):
+    # 1.validate first that the user exists
+    if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
+    
     return db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
 
 # return a match as soon as we see one
+# read todo by todo user id
 @router.get('/todo/{todo_id}', status_code = status.HTTP_200_OK)
-async def read_todo(db: db_dependency, todo_id: int = Path(gt = 0) ):
-    todo_model = db.query(Todos).filter(Todos.id == todo_id).first()
+async def read_todo(user:user_dependency,db: db_dependency, todo_id: int = Path(gt = 0) ):
+    # 1.validate first that the user exists
+    if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
+    # filter by the Todo id, and validate and filter that owner id is the same as the todo id
+    todo_model = db.query(Todos).filter(Todos.id == todo_id).filter(Todos.owner_id == user.get('id')).first()
     if todo_model is not None: return todo_model
     raise HTTPException(status_code = 404, detail='Todo not found')
 
