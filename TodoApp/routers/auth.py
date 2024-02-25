@@ -44,10 +44,11 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get('sub')
         user_id: int = payload.get('id')
+        user_role: str = payload.get('role')
         if username is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail= 'Could not validate credentials')
         # if it does work return the user
-        return {'username':username, 'id':user_id}
+        return {'username':username, 'id':user_id, 'user_role':user_role}
     except JWTError: 
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail= 'Could not validate credentials')
 
@@ -97,9 +98,10 @@ def authenticate_user(username: str, password: str, db: db_dependency):
     # otherwise return the user that has been authenticated
     return user
 
-def create_access_token(username: str, user_id: int, expires_delta:timedelta):
+# adding role to our jwt so that we can eval a user by also his/her role in the application
+def create_access_token(username: str, user_id: int, role:str, expires_delta:timedelta):
     # 1. this is our encodeing that lives inside of the jwt which will contain information about the user
-    encode = {'sub':username, 'id':user_id}
+    encode = {'sub':username, 'id':user_id, 'role':role}
     #2. calculate when we want the jwt to expire & update our encoding  with the time we want for it to expire 
     expire = datetime.utcnow() + expires_delta
     encode.update({'exp':expire})
@@ -148,9 +150,10 @@ async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm,
     if not user: raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail= 'Could not validate credentials')
 
 
-    token = create_access_token(user.username, user.id, timedelta(minutes=20))
+    token = create_access_token(user.username, user.id, user.role, timedelta(minutes=20))
     # otherwise return the newly created token
     return {'access_token': token, 'token_type': 'bearer'}
+
 
 @router.get('/users', status_code=status.HTTP_200_OK)
 async def get_all_users(db:db_dependency):
