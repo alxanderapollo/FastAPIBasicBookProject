@@ -1,14 +1,14 @@
-# our table
 from fastapi import APIRouter, Depends, HTTPException, Path
 from pydantic import BaseModel, Field
-# depends is dependency injection, we need to do something before we excute what we execute
-# import our engine and our models
-from models import Todos
-from database import SessionLocal
 from typing import Annotated
-from sqlalchemy.orm import Session
 from starlette import status
+# depends is dependency injection, we need to do something before we excute what we execute
+
+# import our engine and our models
 from .auth import get_current_user
+from database import SessionLocal
+from models import Todos
+from sqlalchemy.orm import Session
 
 router = APIRouter(
     tags=['todo']
@@ -34,7 +34,7 @@ def get_db():
         db.close()
 
     
-#  we can pass this varaible around to open up our api end point connection to our Db as Dependency injection, instead of writing a long list, fo
+#  we can pass this varaible around to open up our api end point connection to our Db as Dependency injection, instead of writing a long list
 db_dependency = Annotated[Session, Depends(get_db)]
 # depends on whether we can get a user
 user_dependency = Annotated[dict, Depends(get_current_user)]

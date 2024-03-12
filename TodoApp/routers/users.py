@@ -1,3 +1,14 @@
+'''
+    this api route is for our users 
+    it gets users by email and returns the requested information after making sure the requeste has been verified
+
+    and it updates the user password, using bcrypt to hash and then stores it into the db 
+
+'''
+
+
+
+
 #DB Stuff 
 # DB models for creating users, and getting all of our users
 from models import Users
