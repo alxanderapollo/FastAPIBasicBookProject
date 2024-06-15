@@ -11,6 +11,7 @@ class Users(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     role = Column(String)
+    phone_number = Column(String)
 
 #1. create a name for our DB with __tablename__
 #2. after create our Cols,and determine if it is a PKey (qunique identifier), index = true allows our db to know that it is indexable 

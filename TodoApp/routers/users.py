@@ -15,12 +15,12 @@ from models import Users
 # this import is where our db lives and is created, and connected, this is how we use it in our project
 from database import SessionLocal
 from sqlalchemy.orm import Session
-
+# ss
 # FASTAPI and its libraries
 # APIRouter -  for better structuring of our multiple API's across the project  
 # Depends is used for our dependencies when we call on our DB
 # HTTPEXCEPTIONS are for web exceptions, and status is for codes after commit a transaction 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import Field, BaseModel
 from typing import Annotated
 from starlette import status
@@ -76,14 +76,25 @@ async def get_user(user:user_dependency, db:db_dependency, user_email:str ):
 async def update_password(user:user_dependency, db:db_dependency, user_verification: UserVerification):
 
     if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
-
     user_model = db.query(Users).filter(Users.id == user.get('id')).first()
 
     # if the passwords dont match, raise an exception
     if not bcrypt_context.verify(user_verification.password,user_model.hashed_password):
         raise HTTPException(status_code=401, detail='Error on password Change')
+    
     # otherwise add the new pass as an updated pass to our user - and then add that user
     user_model.hashed_password = bcrypt_context.hash(user_verification.new_password)
+    db.add(user_model)
+    db.commit()
+
+@router.put('/phonenumber/{phone_number}', status_code=status.HTTP_200_OK)
+async def update_phone_number(user:user_dependency, db:db_dependency,phone_number: str):
+
+    if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
+    
+    user_model = db.query(Users).filter(Users.id == user.get('id')).first()
+
+    user_model.phone_number = phone_number
     db.add(user_model)
     db.commit()
 

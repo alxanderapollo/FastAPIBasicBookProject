@@ -62,6 +62,7 @@ class CreateUserRequest(BaseModel):
     last_name: str
     password: str
     role: str
+    phone_number: str
 
 class Token(BaseModel):
     access_token: str
@@ -108,8 +109,6 @@ def create_access_token(username: str, user_id: int, role:str, expires_delta:tim
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
     
      
-
-
 # since password is hashed and thats diffrent from how we recieve it in our Db we can't dump the values they need to be opened up the password needs to be hashed and then we store the hash
     # to hash our password we need to install bcrpty
     # install seperately
@@ -132,7 +131,8 @@ async def create_user(db: db_dependency,
         last_name=create_user_request.last_name,
         role=create_user_request.role,
         hashed_password=bcrypt_context.hash(create_user_request.password),
-        is_active=True
+        is_active=True,
+        phone_number = create_user_request.phone_number,
     )
     db.add(create_user_model)
     db.commit()

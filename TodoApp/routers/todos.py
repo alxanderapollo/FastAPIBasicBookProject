@@ -16,7 +16,7 @@ router = APIRouter(
 # creates everything from our models file, and Db file to create a new DB with Todos and all of the columns that have been layed out
 # only runs if our todo.db does not exist
 # models.Base.metadata.create_all(bind=engine)
-
+ 
 # # to include api endpoints from our auth file 
 # app.include_router(auth.router)
 
@@ -53,7 +53,6 @@ class TodoRequest(BaseModel):
 async def read_all(db:db_dependency, user:user_dependency):
     # 1.validate first that the user exists
     if user is None: raise HTTPException(status_code=401, detail='Authentication Failed')
-    
     return db.query(Todos).filter(Todos.owner_id == user.get('id')).all()
 
 # return a match as soon as we see one
