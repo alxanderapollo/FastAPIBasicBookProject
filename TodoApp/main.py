@@ -9,6 +9,12 @@ app = FastAPI()
 # only runs if our todo.db does not exist
 models.Base.metadata.create_all(bind=engine)
 
+
+# route to check if the app is up and running - known as a health check
+@app.get('/healthy')
+def health_check():
+    return {'status': 'Healthy'}
+
 # to include api endpoints from our auth file and todos 
 app.include_router(auth.router)
 app.include_router(todos.router)
